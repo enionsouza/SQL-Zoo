@@ -483,11 +483,233 @@ South Asia	9437710
 /*****************************************************************************/
 -- The JOIN operation Tutorial (https://sqlzoo.net/wiki/The_JOIN_operation)
 
+-- 1. Modify it to show the matchid and player name for all goals scored by Germany. To identify German players, check for: teamid = 'GER'
+SELECT matchid, player FROM goal 
+  WHERE teamid = 'GER'
 
 
+-- 2. Show id, stadium, team1, team2 for just game 1012
+SELECT id, stadium, team1, team2 FROM game
+  WHERE id = 1012
+
+-- 3. Modify it to show the player, teamid, stadium and mdate for every German goal.
+SELECT goal.player, goal.teamid, game.stadium, game.mdate FROM game JOIN goal ON goal.teamid = 'GER' AND goal.matchid = game.id
+
+-- 4. Show the team1, team2 and player for every goal scored by a player called Mario player LIKE 'Mario%'
+SELECT game.team1, game.team2, goal.player FROM game JOIN goal WHERE goal.matchid = game.id AND player LIKE 'Mario%'
+
+-- 5. Show player, teamid, coach, gtime for all goals scored in the first 10 minutes gtime<=10
+SELECT player, teamid, coach, gtime
+  FROM goal JOIN eteam ON teamid = id AND gtime <= 10
+
+-- 6. List the dates of the matches and the name of the team in which 'Fernando Santos' was the team1 coach.
+SELECT mdate, teamname FROM game JOIN eteam ON team1 = eteam.id AND coach = 'Fernando Santos'
+
+-- 7. List the player for every goal scored in a game where the stadium was 'National Stadium, Warsaw'
+SELECT player FROM goal JOIN game ON matchid = id AND stadium = 'National Stadium, Warsaw'
+
+
+-- 8. Instead show the name of all players who scored a goal against Germany.
+SELECT DISTINCT player
+  FROM game JOIN goal ON matchid = id 
+    WHERE (teamid <> 'GER' AND (team1 = 'GER' OR team2 = 'GER'))
+
+
+-- 9. Show teamname and the total number of goals scored.
+SELECT teamname, COUNT(player) AS goals
+  FROM eteam JOIN goal ON id=teamid
+  GROUP BY teamname
+
+-- 10. Show the stadium and the number of goals scored in each stadium.
+SELECT stadium, COUNT(player) AS goals_scored FROM game JOIN goal ON id = matchid GROUP BY stadium
+
+-- 11. For every match involving 'POL', show the matchid, date and the number of goals scored.
+SELECT matchid, mdate AS date, COUNT(teamid) AS goals
+  FROM game JOIN goal ON matchid = id WHERE team1 = 'POL' OR team2 = 'POL' GROUP BY matchid, date
+
+-- 12. For every match where 'GER' scored, show matchid, match date and the number of goals scored by 'GER'
+SELECT matchid, mdate, COUNT(teamid) AS goals
+  FROM game JOIN goal ON matchid = id WHERE teamid = 'GER' GROUP BY matchid, mdate
+
+-- 13. List every match with the goals scored by each team as shown. This will use "CASE WHEN" which has not been explained in any previous exercises.
+-- mdate	team1	score1	team2	score2
+-- 1 July 2012	ESP	4	ITA 	0
+-- 10 June 2012	ESP	1	ITA	1
+-- 10 June 2012	IRL	1	CRO	3
+-- ...
+SELECT mdate,
+  team1,
+  SUM(CASE WHEN teamid=team1 THEN 1 ELSE 0 END) score1,
+  team2,
+  SUM(CASE WHEN teamid=team2 THEN 1 ELSE 0 END) score2
+  FROM game LEFT JOIN goal ON matchid = id
+  GROUP BY mdate, matchid, team1, team2;
+
+
+-- JOIN Quiz (https://sqlzoo.net/wiki/JOIN_Quiz)
+
+-- 1. You want to find the stadium where player 'Dimitris Salpingidis' scored. Select the JOIN condition to use:
+game  JOIN goal ON (id=matchid)
+
+-- 2. You JOIN the tables goal and eteam in an SQL statement. Indicate the list of column names that may be used in the SELECT line:
+matchid, teamid, player, gtime, id, teamname, coach
+
+-- 3. Select the code which shows players, their team and the amount of goals they scored against Greece(GRE).
+SELECT player, teamid, COUNT(*)
+  FROM game JOIN goal ON matchid = id
+ WHERE (team1 = "GRE" OR team2 = "GRE")
+   AND teamid != 'GRE'
+ GROUP BY player, teamid
+
+-- 4. Select the result that would be obtained from this code:
+-- SELECT DISTINCT teamid, mdate
+--   FROM goal JOIN game on (matchid=id)
+--  WHERE mdate = '9 June 2012'
+DEN	9 June 2012
+GER	9 June 2012
+
+-- 5. Select the code which would show the player and their team for those who have scored against Poland(POL) in National Stadium, Warsaw.
+  SELECT DISTINCT player, teamid 
+   FROM game JOIN goal ON matchid = id 
+  WHERE stadium = 'National Stadium, Warsaw' 
+ AND (team1 = 'POL' OR team2 = 'POL')
+   AND teamid != 'POL'
+
+-- 6. Select the code which shows the player, their team and the time they scored, for players who have played in Stadion Miejski (Wroclaw) but not against Italy(ITA).
+SELECT DISTINCT player, teamid, gtime
+  FROM game JOIN goal ON matchid = id
+ WHERE stadium = 'Stadion Miejski (Wroclaw)'
+   AND (( teamid = team2 AND team1 != 'ITA') OR ( teamid = team1 AND team2 != 'ITA'))
+
+-- 7. Select the result that would be obtained from this code:
+-- SELECT teamname, COUNT(*)
+--   FROM eteam JOIN goal ON teamid = id
+--  GROUP BY teamname
+-- HAVING COUNT(*) < 3
+Netherlands	2
+Poland	2
+Republic of Ireland	1
+Ukraine	2
 
 
 /*****************************************************************************/
+
+-- More JOIN operations (https://sqlzoo.net/wiki/More_JOIN_operations)
+
+
+-- 1 1962 movies
+SELECT id, title
+ FROM movie
+ WHERE yr=1962
+
+-- 2 When was Citizen Kane released?
+SELECT yr FROM movie WHERE title = 'Citizen Kane'
+
+-- 3 Star Trek movies
+SELECT id, title, yr FROM movie WHERE title LIKE '%Star Trek%' ORDER BY yr
+
+-- 4 id for actor Glenn Close
+SELECT id FROM actor WHERE name = 'Glenn Close'
+
+-- 5 id for Casablanca
+SELECT id FROM movie WHERE title = 'Casablanca'
+
+-- 6 Cast list for Casablanca
+SELECT name FROM actor JOIN casting ON id=actorid WHERE movieid=11768
+
+-- 7 Alien cast list
+SELECT name FROM movie JOIN casting ON movie.id = movieid JOIN actor ON actorid = actor.id WHERE title = 'Alien'
+
+-- 8 Harrison Ford movies
+SELECT title FROM movie JOIN casting ON movie.id = movieid JOIN actor ON actorid = actor.id WHERE name = 'Harrison Ford'
+
+-- 9 Harrison Ford as a supporting actor
+SELECT title FROM movie JOIN casting ON movie.id = movieid JOIN actor ON actorid = actor.id WHERE name = 'Harrison Ford' AND ord > 1
+
+-- 10 Lead actors in 1962 movies
+SELECT title, name FROM movie JOIN casting ON movie.id = movieid JOIN actor ON actorid = actor.id WHERE yr = 1962 AND ord = 1
+
+-- 11 Busy years for Rock Hudson
+SELECT yr,COUNT(title) FROM
+  movie JOIN casting ON movie.id=movieid
+        JOIN actor   ON actorid=actor.id
+WHERE name='Rock Hudson'
+GROUP BY yr
+HAVING COUNT(title) > 2
+
+-- 12 Lead actor in Julie Andrews movies
+SELECT title, name FROM
+  movie JOIN casting ON movie.id = movieid
+        JOIN actor   ON actorid=actor.id
+          WHERE movie.id IN (SELECT movieid FROM casting
+                              WHERE actorid IN (
+                                SELECT id FROM actor
+                                WHERE name='Julie Andrews')) 
+                AND ord = 1
+
+-- 13 Actors with 15 leading roles
+SELECT name FROM casting JOIN actor ON (actorid = actor.id AND ord = 1) GROUP BY name HAVING COUNT(*) >= 15
+
+
+-- 14 List the films released in the year 1978 ordered by the number of actors in the cast, then by title.
+SELECT title, COUNT(actorid) FROM movie JOIN casting ON movieid = movie.id WHERE yr = 1978 GROUP BY title ORDER BY COUNT(actorid) DESC, title
+
+-- 15 List all the people who have worked with 'Art Garfunkel'.
+SELECT name FROM casting JOIN actor ON actorid = actor.id WHERE name != 'Art Garfunkel' AND movieid IN (SELECT movieid FROM movie JOIN casting ON movie.id = movieid JOIN actor ON actorid = actor.id WHERE name = 'Art Garfunkel')
+
+
+-- JOIN Quiz 2 (https://sqlzoo.net/wiki/JOIN_Quiz_2)
+
+-- 1. Select the statement which lists the unfortunate directors of the movies which have caused financial loses (gross < budget)
+SELECT name
+  FROM actor INNER JOIN movie ON actor.id = director
+ WHERE gross < budget
+
+-- 2. Select the correct example of JOINing three tables
+SELECT *
+  FROM actor JOIN casting ON actor.id = actorid
+  JOIN movie ON movie.id = movieid
+
+-- 3. Select the statement that shows the list of actors called 'John' by order of number of movies in which they acted
+SELECT name, COUNT(movieid)
+  FROM casting JOIN actor ON actorid=actor.id
+ WHERE name LIKE 'John %'
+ GROUP BY name ORDER BY 2 DESC
+
+-- 4. Select the result that would be obtained from the following code:
+
+--  SELECT title 
+--    FROM movie JOIN casting ON (movieid=movie.id)
+--               JOIN actor   ON (actorid=actor.id)
+--   WHERE name='Paul Hogan' AND ord = 1
+Table-B
+"Crocodile" Dundee
+Crocodile Dundee in Los Angeles
+Flipper
+Lightning Jack
+
+-- 5. Select the statement that lists all the actors that starred in movies directed by Ridley Scott who has id 351
+SELECT name
+  FROM movie JOIN casting ON movie.id = movieid
+  JOIN actor ON actor.id = actorid
+WHERE ord = 1 AND director = 351
+
+
+-- 6. There are two sensible ways to connect movie and actor. They are:
+- link the director column in movies with the primary key in actor
+- connect the primary keys of movie and actor via the casting table
+
+-- 7. Select the result that would be obtained from the following code:
+--  SELECT title, yr 
+--    FROM movie, casting, actor 
+--   WHERE name='Robert De Niro' AND movieid=movie.id AND actorid=actor.id AND ord = 3
+Table-B
+A Bronx Tale	1993
+Bang the Drum Slowly	1973
+Limitless	2011
+
+
+
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
