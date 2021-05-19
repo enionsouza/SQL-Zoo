@@ -1,10 +1,17 @@
 -- SELECT basics Tutorial (https://sqlzoo.net/wiki/SELECT_basics)
+
+-- 1. Modify it to show the population of Germany
 SELECT population FROM world WHERE name = 'Germany';
+
+-- 2. Show the name and the population for 'Sweden', 'Norway' and 'Denmark'.
 SELECT name, population FROM world WHERE name IN ('Sweden', 'Norway', 'Denmark');
+
+-- 3. Which countries are not too small and not too big? BETWEEN allows range checking (range specified is inclusive of boundary values). The example below shows countries with an area of 250,000-300,000 sq. km. Modify it to show the country and the area for countries with an area between 200,000 and 250,000.
 SELECT name, area FROM world WHERE area BETWEEN 200000 AND 250000;
 
 
 -- SELECT Quiz (https://sqlzoo.net/wiki/SELECT_Quiz)
+
 -- 1. Select the code which produces this table
 -- name	population
 -- Bahrain	1234571
@@ -71,7 +78,7 @@ SELECT name
 
 -- 3 Per capita GDP
 SELECT name, gdp/population AS per_capita_GDP FROM world
-  WHERE population >= 200000000 ORDER BY per_capita_GDP DESC;
+  WHERE population >= 200000000;
 
 -- 4 South America In millions
 SELECT name, population/1000000 AS pop_in_millions FROM world
